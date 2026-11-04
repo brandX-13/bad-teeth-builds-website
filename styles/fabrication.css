@@ -37,3 +37,54 @@
   .portfolio-nav a, .category-heading, .project-photo figcaption { border-color: CanvasText; }
   .category-number, .project-photo figcaption span { color: CanvasText; }
 }
+
+/* Compact phone galleries and an on-demand mobile photo viewer only. */
+@media (max-width: 760px) {
+  .fabrication-portfolio { margin-top: 40px; padding-top: 32px; }
+  #garage h2 { font-size: clamp(34px, 9vw, 40px); line-height: 1.5; }
+  #garage h3 { line-height: 1.5; }
+  #garage h2, #garage h3, #garage h4 { white-space: normal; overflow-wrap: break-word; }
+  #garage .fabrication-copy h3 { font-size: 36px; line-height: 1.5; }
+  .fabrication-portfolio #portfolio-title { font-size: clamp(26px, 7vw, 30px); line-height: 1.5; }
+  .fabrication-portfolio .section-heading { gap: 18px; margin-bottom: 22px; }
+  .portfolio-nav { gap: 8px; margin-bottom: 24px; }
+  .portfolio-nav a { min-height: 44px; padding: 9px 12px; }
+  .category-heading { gap: 10px; padding-bottom: 14px; }
+  .category-heading h3 { min-width: 0; font-size: 23px; line-height: 1.5; }
+  .portfolio-category + .portfolio-category { margin-top: 36px; }
+  .fabrication-project { padding-top: 24px; }
+  .fabrication-project + .fabrication-project { margin-top: 24px; }
+  .project-heading { margin-bottom: 16px; }
+  .project-heading .eyebrow { margin-bottom: 8px; }
+  .project-heading h4 { margin: 0 0 8px; font-size: 20px; line-height: 1.5; }
+  .project-heading > p:last-child { font-size: 13px; line-height: 1.55; }
+  .project-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .project-photo .original-photo { display: flex; align-items: center; justify-content: center; height: 128px; min-height: 128px; background: #090909; }
+  .project-photo img { width: 100%; height: 100%; object-fit: contain; }
+  .project-photo { position: relative; box-shadow: 3px 3px 0 #080808; }
+  /* Stretch the single existing image link across its entire card. */
+  .project-photo .original-photo { position: static; }
+  .project-photo .original-photo::after { content: ""; position: absolute; inset: -1px; z-index: 1; cursor: pointer; }
+  .project-photo .original-photo:focus-visible { outline: none; }
+  .project-photo .original-photo:focus-visible::after { outline: 3px solid white; outline-offset: 3px; }
+  .project-photo figcaption { min-height: 42px; gap: 6px; padding: 6px 8px; font-size: 10px; line-height: 1.4; }
+  .project-photo .original-photo, .fabrication-photo .original-photo { -webkit-tap-highlight-color: transparent; }
+  body.mobile-photo-open { overflow: hidden; }
+  .mobile-photo-viewer {
+    width: calc(100% - 16px); max-width: none;
+    height: calc(100vh - 16px); height: calc(100dvh - 16px);
+    max-height: calc(100vh - 16px); max-height: calc(100dvh - 16px);
+    margin: auto; padding: 12px;
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    border: 1px solid #666; background: #101010; color: var(--white); overflow: auto;
+  }
+  .mobile-photo-viewer[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 12px; }
+  .mobile-photo-viewer::backdrop { background: #000e; }
+  .mobile-photo-controls { display: flex; justify-content: flex-end; }
+  .mobile-photo-close { min-width: 112px; min-height: 48px; padding: 10px 14px; border: 1px solid #e22129; background: var(--button-red); color: white; font: bold 14px/1.5 Arial, Helvetica, sans-serif; cursor: pointer; }
+  .mobile-photo-close:focus-visible { outline: 3px solid white; outline-offset: 3px; }
+  .mobile-photo-image { min-height: 0; width: 100%; height: 100%; object-fit: contain; }
+  .mobile-photo-caption { font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+  .mobile-photo-error { margin-top: 0; font-size: 14px; line-height: 1.5; }
+}

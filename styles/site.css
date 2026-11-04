@@ -229,3 +229,12 @@ h2 { font-size: clamp(40px, 4.3vw, 64px); }
   .button, .steel-frame, .series-card, .panel { border: 1px solid CanvasText; }
   .red-text, .wordmark > span:not(.brand-mark) { color: CanvasText; }
 }
+
+/* Phone-only refinement; tablet and desktop rules above stay unchanged. */
+@media (max-width: 760px) {
+  .series-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .series-card { min-height: 0; padding: 22px 20px 18px; }
+  .series-number { font-size: 50px; margin-bottom: 14px; }
+  .series-card h3 { font-size: clamp(25px, 7vw, 34px); line-height: 1.1; overflow-wrap: anywhere; }
+  .series-card > p:not(.card-kicker) { margin-bottom: 18px; }
+}
