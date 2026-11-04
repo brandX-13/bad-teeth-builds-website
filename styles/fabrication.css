@@ -1,0 +1,39 @@
+﻿/* Fabrication portfolio only; the existing site theme and sections stay intact. */
+.fabrication-portfolio { margin-top: 90px; padding-top: 65px; border-top: 1px solid var(--line); }
+.fabrication-portfolio #portfolio-title { font-size: clamp(36px, 4vw, 56px); }
+.portfolio-nav { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 48px; }
+.portfolio-nav a { display: inline-flex; align-items: center; min-height: 48px; padding: 10px 16px; border: 1px solid var(--line); border-left: 3px solid var(--red); background: var(--black); text-decoration: none; font-size: 12px; font-weight: bold; }
+.portfolio-nav a:hover { border-color: var(--red); background: #251113; }
+.portfolio-category + .portfolio-category { margin-top: 65px; }
+.category-heading { display: flex; gap: 18px; align-items: baseline; padding-bottom: 20px; border-bottom: 3px solid var(--red); }
+.category-number { color: var(--muted); font: 18px/1.5 "Courier New", monospace; }
+.category-heading h3 { font-size: clamp(28px, 3vw, 40px); line-height: 1.15; }
+.fabrication-project { min-width: 0; padding-top: 32px; }
+.fabrication-project + .fabrication-project { margin-top: 35px; border-top: 1px solid var(--line); }
+.project-heading { max-width: 780px; margin-bottom: 24px; }
+.project-heading .eyebrow { margin-bottom: 10px; }
+.project-heading h4 { margin: 0 0 14px; font: 900 clamp(25px, 2.7vw, 34px)/1.15 var(--heading); letter-spacing: .01em; overflow-wrap: break-word; }
+.project-heading > p:last-child { color: var(--muted); font-size: 15px; }
+.project-gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 20px; }
+.project-photo { min-width: 0; }
+.project-photo .original-photo { min-height: 44px; }
+.project-photo img { width: 100%; height: auto; object-fit: contain; }
+.project-photo figcaption { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 55px; padding: 12px 14px; border-top: 2px solid var(--red); font: 11px/1.6 "Courier New", monospace; }
+.project-photo figcaption span { flex-shrink: 0; color: var(--red); font-size: 20px; }
+@media (max-width: 1100px) {
+  .project-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .fabrication-portfolio { margin-top: 60px; padding-top: 45px; }
+  .portfolio-nav { gap: 10px; margin-bottom: 35px; }
+  .portfolio-nav a { flex: 1 1 100%; }
+  .category-heading { gap: 12px; }
+  .category-heading h3 { font-size: 30px; }
+  .portfolio-category + .portfolio-category { margin-top: 50px; }
+  .project-gallery { grid-template-columns: 1fr; gap: 22px; }
+  .fabrication-project + .fabrication-project { margin-top: 30px; }
+}
+@media (forced-colors: active) {
+  .portfolio-nav a, .category-heading, .project-photo figcaption { border-color: CanvasText; }
+  .category-number, .project-photo figcaption span { color: CanvasText; }
+}
