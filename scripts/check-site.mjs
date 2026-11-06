@@ -37,16 +37,47 @@ const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
 assert.equal(new Set(ids).size, ids.length, 'Duplicate anchor');
 for (const id of ['main', 'top', 'videos', 'maintenance', 'installs', 'fabrication', 'shop-talk', 'garage', 'coil-cover', 'app', 'merch', 'partners', 'about']) assert(ids.includes(id), 'Missing section ' + id);
 const links = [...html.matchAll(/\b(?:href|src)="([^"]+)"/g)].map(match => match[1]);
-let local = 0, anchors = 0, channel = 0;
+const seriesPlaylists = {
+  "maintenance": {
+    "number": 1,
+    "url": "https://www.youtube.com/playlist?list=PLGz0VVctYMiQ"
+  },
+  "installs": {
+    "number": 2,
+    "url": "https://www.youtube.com/playlist?list=PLRdiEbhCl5sc"
+  },
+  "fabrication": {
+    "number": 3,
+    "url": "https://www.youtube.com/playlist?list=PLdkLuscRNGCw"
+  },
+  "shop-talk": {
+    "number": 4,
+    "url": "https://www.youtube.com/playlist?list=PLdIEpr4_Ehpk"
+  }
+};
+const channelURL = 'https://youtube.com/@brandx-design';
+const approvedYouTubeURLs = new Set([channelURL, ...Object.values(seriesPlaylists).map(series => series.url)]);
+let local = 0, anchors = 0, channel = 0, playlistLinks = 0;
 for (const href of links) {
   if (href.startsWith('#')) { assert(ids.includes(href.slice(1)), 'Broken anchor ' + href); anchors++; continue; }
   if (href.startsWith('mailto:')) { assert(href.startsWith('mailto:brandxtattoo@hotmail.com')); continue; }
-  if (/^https?:/.test(href)) { assert.equal(href, 'https://youtube.com/@brandx-design', 'Unapproved external link'); channel++; continue; }
+  if (/^https?:/.test(href)) { assert(approvedYouTubeURLs.has(href), 'Unapproved external link ' + href); if (href === channelURL) channel++; else playlistLinks++; continue; }
   const file = path.resolve(root, decodeURIComponent(href));
   assert(file.startsWith(root + path.sep), 'Path escapes website');
   assert(fs.existsSync(file), 'Broken local link ' + href);
   local++;
 }
+for (const [id, series] of Object.entries(seriesPlaylists)) {
+  const card = html.match(new RegExp('<article class="series-card" id="' + id + '"[\\s\\S]*?</article>'))?.[0];
+  assert(card, 'Missing series card ' + id);
+  assert.equal((card.match(/<a\b/g) || []).length, 1, 'Each card must use one interactive link');
+  assert(card.includes('href="' + series.url + '" target="_blank" rel="noopener noreferrer"'), 'Wrong series playlist or link protections: ' + id);
+  assert(card.includes('>Watch Series ' + series.number + ' <'), 'Wrong series call to action: ' + id);
+  assert(card.includes('opens the playlist in a new tab'), 'Stale channel accessibility wording');
+}
+assert.equal(playlistLinks, 4);
+assert.equal(channel, 5, 'Existing channel buttons/links must remain unchanged');
+assert(css.includes('.series-card > a::after { content: ""; position: absolute; inset: -3px -1px -1px;'), 'Series links must cover the whole card');
 const images = [...html.matchAll(/<img\b[^>]*>/g)].map(match => match[0]);
 assert.equal(images.length, 25);
 const imageFiles = [];
@@ -135,7 +166,7 @@ console.log('PASS seven owner-confirmed projects in three categories; all 23 ori
 console.log('PASS gallery grouping, dimensions, hashes, descriptive alternatives, enlargement links and deferred loading.');
 
 console.log('PASS protected privacy/support/CNAME and all five original images: byte-for-byte unchanged.');
-console.log('PASS ' + local + ' local references, ' + anchors + ' anchor links, ' + channel + ' verified-channel links; unique section IDs.');
+console.log('PASS ' + local + ' local references, ' + anchors + ' anchor links, ' + channel + ' verified-channel links, ' + playlistLinks + ' owner-approved playlist links; unique section IDs.');
 console.log('PASS original banner and coil photo, descriptive alternatives, explicit dimensions, deferred coil loading; previously removed homepage photos remain unreferenced.');
 console.log('PASS static architecture, local resources, app release/merch labels, keyboard focus and responsive/reduced-motion rules.');
 console.log('Browser layout, link interaction and viewport checks must also be run; this checker is not a physical-device test.');

@@ -96,6 +96,9 @@ h2 { font-size: clamp(40px, 4.3vw, 64px); }
 .series-card > p:not(.card-kicker) { font-size: 13px; color: var(--muted); margin-bottom: 25px; }
 .series-card > a { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding-top: 14px; margin-top: auto; min-height: 48px; border-top: 1px solid #464646; text-decoration: none; font-size: 11px; font-weight: bold; }
 .series-card > a:hover { text-decoration: underline; }
+.series-card > a::after { content: ""; position: absolute; inset: -3px -1px -1px; z-index: 1; cursor: pointer; }
+.series-card > a:focus-visible { outline: none; }
+.series-card > a:focus-visible::after { outline: 3px solid white; outline-offset: 5px; }
 .series-card > a > span[aria-hidden] { color: var(--red); font-size: 22px; }
 .garage-section { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .photo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }

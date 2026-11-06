@@ -47,13 +47,14 @@ around the original artwork.
 
 ## Content boundaries
 
-The four series link to the existing verified channel:
+The four series cards link directly to their owner-supplied YouTube playlists.
+The main YouTube buttons and channel links retain:
 https://youtube.com/@brandx-design
 
 No episode titles, playlist IDs, sponsors, endorsements, prices or store links
 have been invented. The app is described as not publicly released. Merchandise
 is marked Coming Soon. Image and font resources load locally; YouTube receives
-navigation only when a visitor follows a channel link.
+navigation only when a visitor follows a channel or playlist link.
 
 privacy/index.html, support/index.html, CNAME and GitHub Pages configuration are
 unchanged. No mobile-app repository files are used.
