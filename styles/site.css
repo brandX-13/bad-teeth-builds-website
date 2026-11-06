@@ -44,6 +44,10 @@ section[id], article[id], div[id] { scroll-margin-top: 105px; }
 .button-small { min-height: 44px; padding: 10px 17px; }
 .button-outline { background: transparent; border-color: #777; }
 .button-outline:hover { border-color: var(--red); background: #2a1011; }
+.header-actions { position: relative; display: flex; align-items: center; justify-content: center; gap: 12px; flex-shrink: 0; }
+.header-actions [hidden] { display: none; }
+.header-share { font-family: inherit; cursor: pointer; white-space: nowrap; background: var(--charcoal); }
+.header-share:focus-visible { outline: 3px solid white; outline-offset: 5px; }
 .text-link { display: inline-flex; align-items: center; gap: 15px; min-height: 44px; font-size: 13px; line-height: 1.5; font-weight: bold; text-decoration: none; }
 .text-link > span[aria-hidden] { color: var(--red); font-size: 22px; }
 .text-link:hover { text-decoration: underline; }
@@ -155,9 +159,8 @@ h2 { font-size: clamp(40px, 4.3vw, 64px); }
 }
 @media (max-width: 1100px) {
   .container { width: calc(100% - 48px); }
-  .header-inner { gap: 18px; }
-  .main-nav { gap: 19px; }
-  .header-watch { display: none; }
+  .header-inner { gap: 10px 18px; flex-wrap: wrap; padding-block: 14px; }
+  .main-nav { order: 1; flex-basis: 100%; gap: 19px; }
   .hero-grid { gap: 32px; }
   .display-title { font-size: 65px; }
   .series-strip a { padding-inline: 12px; font-size: 10px; gap: 10px; }
@@ -176,7 +179,9 @@ h2 { font-size: clamp(40px, 4.3vw, 64px); }
   .site-header { position: static; }
   .header-inner { flex-direction: column; gap: 10px; padding-block: 20px 11px; }
   .wordmark { font-size: 29px; }
-  .main-nav { gap: 8px 24px; justify-content: center; }
+  .main-nav { order: 0; flex-basis: auto; gap: 8px 24px; justify-content: center; }
+  .header-actions { gap: 10px; }
+  .header-actions .button { padding-inline: 14px; }
   .main-nav a { font-size: 10px; min-height: 40px; }
   section[id], article[id], div[id] { scroll-margin-top: 25px; }
   .hero { padding-top: 22px; }
@@ -240,4 +245,42 @@ h2 { font-size: clamp(40px, 4.3vw, 64px); }
   .series-number { font-size: 50px; margin-bottom: 14px; }
   .series-card h3 { font-size: clamp(25px, 7vw, 34px); line-height: 1.1; overflow-wrap: anywhere; }
   .series-card > p:not(.card-kicker) { margin-bottom: 18px; }
+}
+
+/* Website-only sharing dialog. No embedded social widgets or remote resources. */
+body.share-popup-open { overflow: hidden; }
+.share-dialog { width: min(600px, calc(100% - 32px)); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); margin: auto; padding: 0; border: 1px solid #666; border-top: 4px solid var(--red); background: var(--charcoal); color: var(--white); box-shadow: 10px 10px 0 #0008; overflow: auto; overscroll-behavior: contain; }
+.share-dialog::backdrop { background: #000d; }
+.share-panel { position: relative; padding: 36px; background-image: repeating-linear-gradient(169deg, transparent 0 19px, #ffffff04 20px, transparent 21px 75px), linear-gradient(110deg, #111, #1c1d1e 58%, #111); }
+.share-controls { position: sticky; top: 0; z-index: 2; display: flex; justify-content: flex-end; height: 0; padding-right: 10px; pointer-events: none; }
+.share-close { position: relative; top: 10px; flex-shrink: 0; pointer-events: auto; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 1px solid #777; background: var(--black); color: white; font: 30px/1 Arial, Helvetica, sans-serif; cursor: pointer; }
+.share-close:hover { border-color: var(--red); background: #2a1011; }
+.share-panel .eyebrow { max-width: calc(100% - 36px); margin-bottom: 25px; font-size: 10px; }
+.share-panel h2 { font-size: clamp(32px, 6vw, 52px); line-height: 1.05; overflow-wrap: anywhere; }
+.share-subtitle { margin-top: 14px; color: #d1d1cb; font-size: 15px; line-height: 1.5; }
+.share-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 24px; }
+.share-option { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; min-height: 52px; padding: 12px 15px; border: 1px solid #777; background: #111; color: white; text-align: left; text-decoration: none; font: bold 13px/1.5 Arial, Helvetica, sans-serif; cursor: pointer; box-shadow: 3px 3px 0 #000; }
+.share-option > span[aria-hidden] { flex-shrink: 0; color: var(--red); font-size: 19px; line-height: 1; }
+.share-option:hover { border-color: var(--red); background: #2a1011; }
+.share-copy { grid-column: 1 / -1; border-color: #e22129; background: var(--button-red); }
+.share-copy:hover { background: #d00008; border-color: #ff5555; }
+.share-copy > span[aria-hidden] { color: white; }
+.share-close:focus-visible, .share-option:focus-visible, .share-manual input:focus-visible { outline: 3px solid white; outline-offset: 3px; }
+.share-dialog [hidden] { display: none; }
+.share-hint { margin-top: 18px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.share-status { margin-top: 0; color: white; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.share-status:not(:empty) { margin-top: 16px; padding: 10px 12px; border-left: 3px solid var(--red); background: #0b0b0b; }
+.share-manual { margin-top: 12px; font-size: 13px; line-height: 1.6; }
+.share-manual label { display: block; margin-bottom: 8px; }
+.share-manual input { width: 100%; min-height: 44px; padding: 10px; border: 1px solid #777; background: var(--black); color: white; font: inherit; }
+.share-panel .share-motto { margin-top: 24px; padding-top: 16px; border-top: 1px solid #555; font: bold 11px/1.5 "Courier New", monospace; letter-spacing: .12em; }
+@media (max-width: 600px) {
+  .share-panel { padding: 26px 20px 22px; }
+  .share-panel .eyebrow { font-size: 9px; letter-spacing: .06em; margin-bottom: 22px; }
+  .share-options { gap: 10px; margin-top: 20px; }
+  .share-option { padding: 11px 10px; font-size: 12px; }
+}
+@media (forced-colors: active) {
+  .share-dialog, .share-option, .share-close, .share-manual input { border-color: CanvasText; }
+  .share-option > span[aria-hidden] { color: ButtonText; }
 }

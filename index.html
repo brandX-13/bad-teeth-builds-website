@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="styles/site.css">
   <link rel="stylesheet" href="styles/fabrication.css">
   <script src="scripts/mobile-gallery.js" defer></script>
+  <script src="scripts/share-site.js" defer></script>
 </head>
 <body class="home">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -28,9 +29,39 @@
         <a href="#merch">Merch</a>
         <a href="#about">About</a>
       </nav>
-      <a class="button button-small header-watch" href="https://youtube.com/@brandx-design" target="_blank" rel="noopener noreferrer">YouTube <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
+      <div class="header-actions">
+        <a class="button button-small header-watch" href="https://youtube.com/@brandx-design" target="_blank" rel="noopener noreferrer">YouTube <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
+        <button class="button button-small button-outline header-share" id="share-site" type="button" aria-haspopup="dialog" aria-controls="share-dialog" hidden>Share Site</button>
+      </div>
     </div>
   </header>
+
+  <dialog class="share-dialog" id="share-dialog" aria-labelledby="share-title" aria-describedby="share-subtitle">
+    <div class="share-controls">
+      <button class="share-close" id="share-close" type="button" aria-label="Close sharing popup" autofocus>&times;</button>
+    </div>
+    <div class="share-panel">
+      <p class="eyebrow">Bad Teeth Builds / Pass it on</p>
+      <h2 id="share-title">SHARE THE <span class="red-text">MADNESS!</span></h2>
+      <p class="share-subtitle" id="share-subtitle">Know somebody who belongs in this garage?</p>
+      <div class="share-options" role="group" aria-label="Sharing options">
+        <a class="share-option" data-share="email" href="mailto:?subject=Bad%20Teeth%20Builds&amp;body=https%3A%2F%2Fbrandx-design.com%2F">Open Email <span aria-hidden="true">&#8599;</span></a>
+        <a class="share-option" data-share="facebook" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fbrandx-design.com%2F" target="_blank" rel="noopener noreferrer">Share on Facebook <span aria-hidden="true">&#8599;</span><span class="sr-only"> (opens in a new tab)</span></a>
+        <button class="share-option" data-share="instagram" type="button">Copy for Instagram <span aria-hidden="true">&#8599;</span></button>
+        <button class="share-option" data-share="tiktok" type="button">Copy for TikTok <span aria-hidden="true">&#8599;</span></button>
+        <button class="share-option" data-share="messenger" type="button">Copy for Messenger <span aria-hidden="true">&#8599;</span></button>
+        <a class="share-option" data-share="sms" id="share-sms" href="sms:?body=https%3A%2F%2Fbrandx-design.com%2F">Open Messages <span aria-hidden="true">&#8599;</span></a>
+        <button class="share-option share-copy" data-share="copy" type="button">Copy Link <span aria-hidden="true">+</span></button>
+      </div>
+      <p class="share-hint">Instagram, TikTok and Messenger: copy here, then paste in the app. Email and Messages need a compatible app. If nothing opens, use Copy Link.</p>
+      <p class="share-status" id="share-status" role="status" aria-live="polite" aria-atomic="true"></p>
+      <div class="share-manual" id="share-manual" hidden>
+        <label for="share-url">Select and copy the website link:</label>
+        <input id="share-url" type="url" value="https://brandx-design.com/" readonly>
+      </div>
+      <p class="share-motto">STEEL BEFORE SMILES</p>
+    </div>
+  </dialog>
 
   <main id="main" tabindex="-1">
     <section class="hero section-texture" id="top" aria-labelledby="hero-title">

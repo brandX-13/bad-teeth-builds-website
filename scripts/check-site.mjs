@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import assert from 'node:assert/strict';
+import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -28,7 +29,7 @@ const portfolioByPath = new Map(portfolioPhotos.map(photo => [photo.src, photo])
 assert(html.startsWith('<!doctype html>') && /<html lang="en">/.test(html));
 assert.equal((html.match(/<h1\b/g) || []).length, 1);
 assert(!/<(?:iframe|object|embed|form)\b/i.test(html), 'Unexpected embed or form');
-assert.deepEqual(html.match(/<script\b[^>]*>[\s\S]*?<\/script>/gi), ['<script src="scripts/mobile-gallery.js" defer></script>'], 'Only the approved local mobile-gallery enhancement is allowed');
+assert.deepEqual(html.match(/<script\b[^>]*>[\s\S]*?<\/script>/gi), ['<script src="scripts/mobile-gallery.js" defer></script>', '<script src="scripts/share-site.js" defer></script>'], 'Only the approved local gallery and sharing enhancements are allowed');
 assert(!/@import|@font-face|url\s*\(/i.test(css), 'Unexpected remote/font/image CSS resource');
 assert(!/style="|on(?:click|load|error)=/i.test(html), 'Unexpected inline behavior');
 assert(!/filter:|object-fit:\s*cover/i.test(css), 'Original artwork must not be filtered or cropped');
@@ -57,10 +58,15 @@ const seriesPlaylists = {
 };
 const channelURL = 'https://youtube.com/@brandx-design';
 const approvedYouTubeURLs = new Set([channelURL, ...Object.values(seriesPlaylists).map(series => series.url)]);
-let local = 0, anchors = 0, channel = 0, playlistLinks = 0;
+const shareEmail = 'mailto:?subject=Bad%20Teeth%20Builds&amp;body=https%3A%2F%2Fbrandx-design.com%2F';
+const shareFacebook = 'https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fbrandx-design.com%2F';
+const shareSMS = 'sms:?body=https%3A%2F%2Fbrandx-design.com%2F';
+let local = 0, anchors = 0, channel = 0, playlistLinks = 0, facebookLinks = 0;
 for (const href of links) {
   if (href.startsWith('#')) { assert(ids.includes(href.slice(1)), 'Broken anchor ' + href); anchors++; continue; }
-  if (href.startsWith('mailto:')) { assert(href.startsWith('mailto:brandxtattoo@hotmail.com')); continue; }
+  if (href.startsWith('mailto:')) { assert(href.startsWith('mailto:brandxtattoo@hotmail.com') || href === shareEmail); continue; }
+  if (href === shareSMS) continue;
+  if (href === shareFacebook) { facebookLinks++; continue; }
   if (/^https?:/.test(href)) { assert(approvedYouTubeURLs.has(href), 'Unapproved external link ' + href); if (href === channelURL) channel++; else playlistLinks++; continue; }
   const file = path.resolve(root, decodeURIComponent(href));
   assert(file.startsWith(root + path.sep), 'Path escapes website');
@@ -75,6 +81,7 @@ for (const [id, series] of Object.entries(seriesPlaylists)) {
   assert(card.includes('>Watch Series ' + series.number + ' <'), 'Wrong series call to action: ' + id);
   assert(card.includes('opens the playlist in a new tab'), 'Stale channel accessibility wording');
 }
+assert.equal(facebookLinks, 1, 'One approved Facebook sharing URL');
 assert.equal(playlistLinks, 4);
 assert.equal(channel, 5, 'Existing channel buttons/links must remain unchanged');
 assert(css.includes('.series-card > a::after { content: ""; position: absolute; inset: -3px -1px -1px;'), 'Series links must cover the whole card');
@@ -169,4 +176,129 @@ console.log('PASS protected privacy/support/CNAME and all five original images: 
 console.log('PASS ' + local + ' local references, ' + anchors + ' anchor links, ' + channel + ' verified-channel links, ' + playlistLinks + ' owner-approved playlist links; unique section IDs.');
 console.log('PASS original banner and coil photo, descriptive alternatives, explicit dimensions, deferred coil loading; previously removed homepage photos remain unreferenced.');
 console.log('PASS static architecture, local resources, app release/merch labels, keyboard focus and responsive/reduced-motion rules.');
+// Sharing tests simulate browser capabilities without sending messages or touching the clipboard.
+const shareSource = fs.readFileSync(path.join(root, 'scripts/share-site.js'), 'utf8');
+const publicUrl = 'https://brandx-design.com/';
+const approvedServices = ['email', 'facebook', 'instagram', 'tiktok', 'messenger', 'sms', 'copy'];
+assert.deepEqual([...html.matchAll(/data-share="([^"]+)"/g)].map(m => m[1]), approvedServices);
+const approvedLabels = ['Open Email', 'Share on Facebook', 'Copy for Instagram', 'Copy for TikTok', 'Copy for Messenger', 'Open Messages', 'Copy Link'];
+assert.deepEqual([...html.matchAll(/<(?:a|button)\b[^>]*data-share="[^"]+"[^>]*>([^<]+)</g)].map(m => m[1].trim()), approvedLabels);
+const emailURL = new URL(shareEmail.replaceAll('&amp;', '&'));
+assert.equal(emailURL.protocol, 'mailto:');
+assert.equal(emailURL.pathname, '', 'Email sharing does not preselect a recipient');
+assert.equal(emailURL.searchParams.get('subject'), 'Bad Teeth Builds');
+assert.equal(emailURL.searchParams.get('body'), publicUrl);
+assert.deepEqual([...emailURL.searchParams.keys()], ['subject', 'body']);
+assert.equal((html.match(/id="share-dialog"/g) || []).length, 1);
+assert(html.includes('aria-haspopup="dialog" aria-controls="share-dialog"'));
+assert(html.includes('id="share-status" role="status" aria-live="polite" aria-atomic="true"'));
+assert(html.includes('SHARE THE <span class="red-text">MADNESS!</span>'));
+assert(html.includes('Know somebody who belongs in this garage?'));
+assert(html.includes('<p class="share-motto">STEEL BEFORE SMILES</p>'));
+assert(html.includes('id="share-url" type="url" value="' + publicUrl + '" readonly'));
+assert(!/navigator\.share|fetch\(|XMLHttpRequest/.test(shareSource), 'No native share sheet or remote services');
+function shareHarness(navigator = {}) {
+  let activeElement;
+  const element = () => ({
+    hidden: true, textContent: '', open: false, attributes: new Map(), listeners: new Map(),
+    addEventListener(type, listener) { this.listeners.set(type, listener); },
+    emit(type, event = {}) { this.listeners.get(type)?.(event); },
+    click() { this.emit('click'); },
+    setAttribute(name, value) { this.attributes.set(name, value); },
+    removeAttribute(name) { this.attributes.delete(name); },
+    focus() { this.focused = true; activeElement = this; }, select() { this.selected = true; },
+    closest() { return null; }, getClientRects() { return [{}]; }
+  });
+  const elements = Object.fromEntries(['share-site', 'share-dialog', 'share-close', 'share-status', 'share-manual', 'share-url', 'share-sms'].map(id => [id, element()]));
+  const options = approvedServices.map(service => Object.assign(element(), { dataset: { share: service } }));
+  const dialog = elements['share-dialog'];
+  elements['share-url'].closest = () => elements['share-manual'].hidden ? elements['share-manual'] : null;
+  dialog.querySelectorAll = selector => selector === '[data-share]' ? options : [elements['share-close'], ...options, elements['share-url']];
+  dialog.showModal = () => { dialog.open = true; };
+  dialog.close = () => { dialog.open = false; dialog.emit('close'); };
+  dialog.getBoundingClientRect = () => ({ left: 20, top: 20, right: 600, bottom: 700 });
+  const classes = new Set();
+  vm.runInNewContext(shareSource, {
+    navigator, document: { get activeElement() { return activeElement; }, getElementById: id => elements[id], body: { classList: { add: c => classes.add(c), remove: c => classes.delete(c) } } }
+  });
+  return { elements, options, dialog, classes, open: () => elements['share-site'].click(), choose: service => options.find(o => o.dataset.share === service).click() };
+}
+const flush = () => new Promise(setImmediate);
+const copied = [];
+const working = shareHarness({ clipboard: { writeText: async url => { copied.push(url); } } });
+working.open();
+assert(working.dialog.open && working.elements['share-close'].focused && working.classes.has('share-popup-open'));
+working.options.at(-1).focus();
+working.dialog.emit('keydown', { key: 'Tab', preventDefault() {} });
+assert(working.elements['share-close'].focused, 'Tab wraps to Close');
+working.dialog.emit('keydown', { key: 'Tab', shiftKey: true, preventDefault() {} });
+assert(working.options.at(-1).focused, 'Shift-Tab wraps to Copy Link');
+for (const service of ['instagram', 'tiktok', 'messenger', 'copy']) {
+  working.choose(service);
+  await flush();
+  assert.equal(copied.at(-1), publicUrl);
+  assert.equal(working.elements['share-status'].textContent, service === 'copy' ? 'Link copied!' :
+    'Link copied! Paste it into ' + { instagram: 'Instagram', tiktok: 'TikTok', messenger: 'Messenger' }[service] + '.');
+  assert(working.elements['share-manual'].hidden);
+}
+for (const service of ['email', 'facebook', 'sms']) {
+  const before = copied.length;
+  working.choose(service);
+  assert.equal(copied.length, before);
+  assert(working.elements['share-status'].textContent.includes('use Copy Link'));
+  assert.equal(working.elements['share-manual'].hidden, service !== 'sms', 'SMS always offers the manual-copy fallback');
+  if (service === 'sms') assert(!working.elements['share-url'].focused, 'SMS fallback must not steal focus from app handoff');
+}
+working.elements['share-close'].click();
+assert(!working.dialog.open && !working.classes.has('share-popup-open') && working.elements['share-site'].focused);
+working.open();
+assert.equal(working.elements['share-status'].textContent, '', 'Reopening resets old feedback');
+let prevented = false;
+working.dialog.emit('cancel', { preventDefault() { prevented = true; } });
+assert(prevented && !working.dialog.open, 'Escape closes');
+working.open();
+working.dialog.emit('pointerdown', { target: working.dialog, clientX: 0, clientY: 0 });
+working.dialog.emit('click', { target: working.dialog, clientX: 0, clientY: 0 });
+assert(!working.dialog.open, 'Backdrop click closes');
+working.open();
+working.dialog.emit('pointerdown', { target: working.dialog, clientX: 30, clientY: 30 });
+working.dialog.emit('click', { target: working.dialog, clientX: 0, clientY: 0 });
+assert(working.dialog.open, 'A drag starting inside does not dismiss');
+for (const navigator of [{}, { clipboard: { writeText: async () => { throw new Error('Denied'); } } }]) {
+  const manual = shareHarness(navigator);
+  manual.open();
+  manual.choose('messenger');
+  await flush();
+  assert(!manual.elements['share-manual'].hidden && manual.elements['share-url'].focused && manual.elements['share-url'].selected);
+  assert.equal(manual.elements['share-status'].textContent, 'Copy the website link below, then paste it into Messenger.');
+  assert(!manual.dialog.attributes.has('aria-busy'));
+}
+let finishCopy;
+let pendingCalls = 0;
+const pending = shareHarness({ clipboard: { writeText: () => { pendingCalls++; return new Promise(resolve => { finishCopy = resolve; }); } } });
+pending.open(); pending.choose('copy'); pending.choose('instagram');
+assert.equal(pendingCalls, 1, 'Ignore repeated copy presses while pending');
+pending.elements['share-close'].click(); pending.open();
+finishCopy(); await flush();
+assert.equal(pending.elements['share-status'].textContent, '', 'Stale clipboard result must not change a reopened popup');
+assert(!pending.dialog.attributes.has('aria-busy'));
+for (const [navigator, separator] of [
+  [{ userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)', platform: 'iPhone' }, '&'],
+  [{ userAgent: 'Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X)', platform: 'iPad' }, '&'],
+  [{ userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15)', platform: 'MacIntel', maxTouchPoints: 5 }, '&'],
+  [{ userAgent: 'Mozilla/5.0 (Linux; Android 15)', platform: 'Linux armv8l' }, '?'],
+  [{ userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', platform: 'Win32' }, '?'],
+  [{ userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15)', platform: 'MacIntel', maxTouchPoints: 0 }, '?']
+]) {
+  const h = shareHarness(navigator);
+  assert.equal(h.elements['share-sms'].href, 'sms:' + separator + 'body=' + encodeURIComponent(publicUrl));
+  assert.equal(h.elements['share-sms'].href.slice(4).split(/[?&]/)[0], '', 'SMS must not specify a recipient');
+  assert.equal(decodeURIComponent(h.elements['share-sms'].href.split('body=')[1]), publicUrl);
+  h.open(); h.choose('sms');
+  assert(!h.elements['share-manual'].hidden && !h.elements['share-url'].focused);
+  assert(h.elements['share-status'].textContent.includes('If nothing opens'));
+}
+vm.runInNewContext(shareSource, { document: { getElementById: () => null } });
+console.log('PASS seven-option BTB popup: scoped URLs, honest feedback, clipboard success/denial/unavailable, close/reopen, stale-copy guard, Escape/backdrop/focus and SMS variants (simulated).');
+
 console.log('Browser layout, link interaction and viewport checks must also be run; this checker is not a physical-device test.');
